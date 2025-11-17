@@ -1,3 +1,4 @@
+import infrastructure.apinews.service.RequestNewsAPI;
 import infrastructure.s3.service.S3ClientFactory;
 import infrastructure.s3.service.S3SentService;
 
@@ -12,7 +13,9 @@ public class Main {
         String accessKey = "";
         String secretKey = "";
         String sessionToken = "";
-        String bucketName = "raw-paymetrics";
+        String bucketName = "";
+
+        String apitubeKey = "";
 
         Path uploadFolder = Path.of("src/main/resources/upload");
 
@@ -20,6 +23,9 @@ public class Main {
             if(!Files.exists(uploadFolder)){
                 Files.createDirectories(uploadFolder);
             }
+
+            RequestNewsAPI requestHandler = new RequestNewsAPI("https://api.apitube.io/v1/news/everything?api_key="+apitubeKey+"&source.country.code=br&language.code=pt&category.id=medtop:01000000&category.id=medtop:04000000&category.id=medtop:04001000&category.id=medtop:04004001&category.id=medtop:04004002&category.id=medtop:04009006&category.id=medtop:04006000&category.id=medtop:20000000&sort_by=published_at&page_size=5&export=csv");
+            String response = requestHandler.call();
 
             S3SentService sendService = new S3SentService(s3Client, bucketName);
             sendService.uploadAllCSV(uploadFolder);
