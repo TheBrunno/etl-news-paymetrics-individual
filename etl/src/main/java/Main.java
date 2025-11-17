@@ -1,4 +1,5 @@
 import infrastructure.apinews.service.RequestNewsAPI;
+import infrastructure.csv.service.WriteCSV;
 import infrastructure.s3.service.S3ClientFactory;
 import infrastructure.s3.service.S3SentService;
 
@@ -13,7 +14,7 @@ public class Main {
         String accessKey = "";
         String secretKey = "";
         String sessionToken = "";
-        String bucketName = "";
+        String bucketName = "raw-paymetrics";
 
         String apitubeKey = "";
 
@@ -24,11 +25,47 @@ public class Main {
                 Files.createDirectories(uploadFolder);
             }
 
-            RequestNewsAPI requestHandler = new RequestNewsAPI("https://api.apitube.io/v1/news/everything?api_key="+apitubeKey+"&source.country.code=br&language.code=pt&category.id=medtop:01000000&category.id=medtop:04000000&category.id=medtop:04001000&category.id=medtop:04004001&category.id=medtop:04004002&category.id=medtop:04009006&category.id=medtop:04006000&category.id=medtop:20000000&sort_by=published_at&page_size=5&export=csv");
-            String response = requestHandler.call();
+            RequestNewsAPI requestHandlerCSV = new RequestNewsAPI(
+                    "https://api.apitube.io/v1/news/everything"
+                            + "?api_key=" + apitubeKey
+                            + "&source.country.code=br"
+                            + "&language.code=pt"
+                            + "&title=economia,mercado,consumo,varejo,vendas"
+                            + "&category.id=medtop:04000000,medtop:20000247,medtop:20001164"
+                            + "&ignore.category.id=medtop:10000000,medtop:20000178,medtop:20001128"
+                            + "&ignore.title=sexual,cinema,assaltado,sanitária,linux"
+                            + "&sort_by=relevance"
+                            + "&ignore.industry.id=1047,492,116"
+                            + "&per_page=10"
+                            + "&page=1"
+                            + "&export=csv"
+            );
+
+            RequestNewsAPI requestHandlerJSON = new RequestNewsAPI(
+                    "https://api.apitube.io/v1/news/everything"
+                            + "?api_key=" + apitubeKey
+                            + "&source.country.code=br"
+                            + "&title=economia,mercado,consumo,varejo,vendas"
+                            + "&language.code=pt"
+                            + "&category.id=medtop:04000000,medtop:20000247,medtop:20001164"
+                            + "&ignore.category.id=medtop:10000000,medtop:20000178,medtop:20001128"
+                            + "&ignore.title=sexual,cinema,assaltado,sanitária,linux"
+                            + "&sort_by=relevance"
+                            + "&ignore.industry.id=1047,492,116"
+                            + "&per_page=10"
+                            + "&page=1"
+                            + "&export=json"
+            );
+
+            String responseCSV = requestHandlerCSV.call();
+            String responseJSON = requestHandlerJSON.call();
+
+            Path filecsv = WriteCSV.write(uploadFolder, "noticias_semana.csv", responseCSV);
+            Path filejson = WriteCSV.write(uploadFolder, "noticias_semana.json", responseJSON);
 
             S3SentService sendService = new S3SentService(s3Client, bucketName);
-            sendService.uploadAllCSV(uploadFolder);
+            sendService.uploadFile(filecsv);
+            sendService.uploadFile(filejson);
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
