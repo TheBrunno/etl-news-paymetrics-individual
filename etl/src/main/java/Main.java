@@ -1,3 +1,4 @@
+import infrastructure.CSVtoJSON.CSVtoJSON;
 import infrastructure.apinews.service.RequestNewsAPI;
 import infrastructure.csv.service.ReadCSV;
 import infrastructure.csv.service.WriteCSV;
@@ -15,12 +16,12 @@ public class Main {
     public static void main(String[] args) {
         String promptNews = """
                 # Atue como um verificador de notícias para o meu contexto.
-                 
+                
                 Irei te enviar uma lista de títulos de notícias, você vai precisar retornar um CSV em texto, no seguinte padrão:
                 
                 ```csv<uma quebra de linha>
                 faz_sentido,explicacao<uma quebra de linha>
-                true,"...(resumo rapido da notícia explicando como e porque pode afetar o e-commerce)"
+                true,"...(resumo rapido da notícia explicando como e porque pode afetar o e-commerce - digite false caso essa mesma noticia seja repetida)"
                 ```
                 
                 Sem espaços antes e depois das virgulas (commas) divisoras.
@@ -40,8 +41,11 @@ public class Main {
 
         String apitubeKey = "";
 
-        Path uploadFolder = Path.of("src/main/resources/upload");
+        String[] excludeHeaders = {"ID", "Href", "Description", "Body", "Language", "Author", "Categories", "Topics", "Industries",
+        "Entities", "Source", "Sentiment", "Summary", "Keywords", "Links", "Media", "Story", "IsDuplicate", "IsAccessibleForFree", "IsBreaking", "ReadTime",
+        "SentencesCount", "ParagraphsCount", "WordsCount", "CharactersCount"};
 
+        Path uploadFolder = Path.of("src/main/resources/upload");
         try(S3Client s3Client = S3ClientFactory.createClient(accessKey, secretKey, sessionToken, Region.US_EAST_1)){
             if(!Files.exists(uploadFolder)){
                 Files.createDirectories(uploadFolder);
@@ -78,6 +82,7 @@ public class Main {
 
             S3SentService sendService = new S3SentService(s3Client, bucketName);
             sendService.uploadFile(filecsv);
+            CSVtoJSON.csvToJson("src/main/resources/upload/noticias_semana.csv", "src/main/resources/upload/noticias_semana.json", excludeHeaders);
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
