@@ -1,59 +1,71 @@
 package infrastructure.CSVtoJSON;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.opencsv.CSVReader;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import org.apache.commons.csv.*;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.Set;
 
 public class CSVtoJSON {
 
     public static void csvToJson(String csvPath, String jsonOutput, String[] excludeHeaders) {
-        try (
-                CSVReader reader = new CSVReader(new FileReader(csvPath));
-                BufferedWriter bw = new BufferedWriter(new FileWriter(jsonOutput));
-        ) {
 
-            String[] headers = reader.readNext();
+        try (Reader reader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(csvPath), StandardCharsets.UTF_8))) {
 
-            JsonArray jsonArray = new JsonArray();
+            Set<String> excluidos = new HashSet<>();
+            for (String h : excludeHeaders) excluidos.add(h.toLowerCase());
 
-            String[] linha;
-            while ((linha = reader.readNext()) != null) {
+            CSVFormat format = CSVFormat.DEFAULT
+                    .builder()
+                    .setHeader()
+                    .setSkipHeaderRecord(true)
+                    .setIgnoreEmptyLines(true)
+                    .setIgnoreSurroundingSpaces(true)
+                    .build();
+
+            CSVParser parser = format.parse(reader);
+
+            String[] headers = parser.getHeaderNames().toArray(new String[0]);
+
+            int penultimaPos = headers.length - 2;
+            String penultimoHeader = headers[penultimaPos];
+
+            JsonArray array = new JsonArray();
+
+            for (CSVRecord linha : parser) {
+
+                if (linha.get(penultimoHeader).equalsIgnoreCase("false")) {
+                    continue;
+                }
 
                 JsonObject obj = new JsonObject();
 
-                for (int i = 0; i < headers.length; i++) {
+                for (String header : headers) {
 
-                    String key = headers[i];
-                    boolean exclude = false;
+                    if (excluidos.contains(header.toLowerCase())) continue;
 
-                    for (String exc : excludeHeaders) {
-                        if (key.equalsIgnoreCase(exc)) {
-                            exclude = true;
-                            break;
-                        }
-                    }
-                    if (exclude) continue;
+                    String value = linha.get(header);
 
-                    String value = "";
-                    if(i < linha.length){
-                        value = linha[i];
-                    }
-
-                    obj.addProperty(key, value);
+                    obj.addProperty(header, value);
                 }
 
-                jsonArray.add(obj);
+                array.add(obj);
             }
 
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            bw.write(gson.toJson(jsonArray));
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(jsonOutput))) {
+                bw.write(gson.toJson(array));
+            }
+
+            System.out.println("Conversão concluída.");
 
         } catch (Exception e) {
-            System.out.println("Erro: " + e.getMessage());
             e.printStackTrace();
         }
     }

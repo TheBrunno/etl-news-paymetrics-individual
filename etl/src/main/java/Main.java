@@ -21,7 +21,7 @@ public class Main {
                 
                 ```csv<uma quebra de linha>
                 faz_sentido,explicacao<uma quebra de linha>
-                true,"...(resumo rapido da notícia explicando como e porque pode afetar o e-commerce - digite false caso essa mesma noticia seja repetida)"
+                true,"... (resumo rapido da notícia explicando como e porque pode afetar o e-commerce)"
                 ```
                 
                 Sem espaços antes e depois das virgulas (commas) divisoras.
@@ -37,6 +37,7 @@ public class Main {
         String secretKey = "";
         String sessionToken = "";
         String bucketName = "raw-paymetrics";
+        String bucketNameTrusted = "trusted-paymetrics";
         String csvFileName = "noticias_semana.csv";
 
         String apitubeKey = "";
@@ -83,6 +84,9 @@ public class Main {
             S3SentService sendService = new S3SentService(s3Client, bucketName);
             sendService.uploadFile(filecsv);
             CSVtoJSON.csvToJson("src/main/resources/upload/noticias_semana.csv", "src/main/resources/upload/noticias_semana.json", excludeHeaders);
+
+            S3SentService sendServiceTrusted = new S3SentService(s3Client, bucketNameTrusted);
+            sendServiceTrusted.uploadFile(Path.of("src/main/resources/upload/noticias_semana.json"));
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
