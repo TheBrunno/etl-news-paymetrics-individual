@@ -26,7 +26,7 @@ public class S3SentService {
 
             PutObjectRequest objectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
-                    .key("bruno/news/" + fileName)
+                    .key(System.getenv("PATH_BUCKET") + fileName)
                     .contentType("text/csv; charset=UTF-8")
                     .build();
 

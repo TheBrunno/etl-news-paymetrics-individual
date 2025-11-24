@@ -1,3 +1,5 @@
+package lambda;
+
 import infrastructure.CSVtoJSON.CSVtoJSON;
 import infrastructure.apinews.service.RequestNewsAPI;
 import infrastructure.csv.service.ReadCSV;
@@ -13,41 +15,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class Main {
-    public static void main(String[] args) {
-        String promptNews = """
-                # Atue como um verificador de notícias para o meu contexto.
-                
-                Irei te enviar uma lista de títulos de notícias, você vai precisar retornar um CSV em texto, no seguinte padrão:
-                
-                ```csv<uma quebra de linha>
-                faz_sentido,explicacao<uma quebra de linha>
-                true,"... (resumo rapido da notícia explicando como e porque pode afetar o e-commerce)"
-                ```
-                
-                Sem espaços antes e depois das virgulas (commas) divisoras.
-                
-                Na explicação coloque palavras chave em: <strong>palavra-chave</strong>, não retorne com "\\n <quebra de linha>" nem antes nem depois do csv
-                
-                Tenho um e-commerce que pode vender qualquer coisa, preciso de notícias que podem impactar no meu negócio.
-                
-                # TITULO DAS NOTICIAS
-                """;
+    public static void execute() {
+        String promptNews = System.getenv("PROMPT_GEMINI");
 
-        String accessKey = "";
-        String secretKey = "";
-        String sessionToken = "";
-        String bucketName = "raw-paymetrics";
-        String bucketNameTrusted = "trusted-paymetrics";
+        String bucketName = System.getenv("RAW_NAME");
+        String bucketNameTrusted = System.getenv("TRUSTED_NAME");
         String csvFileName = "noticias_semana.csv";
 
-        String apitubeKey = "";
+        String apitubeKey = System.getenv("APITUBE_KEY");
 
         String[] excludeHeaders = {"ID", "Href", "Description", "Body", "Language", "Author", "Categories", "Topics", "Industries",
         "Entities", "Source", "Sentiment", "Summary", "Keywords", "Links", "Media", "Story", "IsDuplicate", "IsAccessibleForFree", "IsBreaking", "ReadTime",
         "SentencesCount", "ParagraphsCount", "WordsCount", "CharactersCount"};
 
-        Path uploadFolder = Path.of("src/main/resources/upload");
-        try(S3Client s3Client = S3ClientFactory.createClient(accessKey, secretKey, sessionToken, Region.US_EAST_1)){
+        Path uploadFolder = Path.of("/tmp/upload");
+
+        try(S3Client s3Client = S3ClientFactory.createClient(Region.US_EAST_1)){
             if(!Files.exists(uploadFolder)){
                 Files.createDirectories(uploadFolder);
             }
@@ -71,7 +54,6 @@ public class Main {
             String responseCSV = requestHandlerCSV.call();
 
             Path filecsv = WriteCSV.write(uploadFolder, csvFileName, responseCSV);
-
             String result = ReadCSV.readSpecificColumn(uploadFolder, csvFileName, 3);
 
             String IAResponse = RequestGeminiAPI.ask(promptNews+result)
@@ -83,10 +65,14 @@ public class Main {
 
             S3SentService sendService = new S3SentService(s3Client, bucketName);
             sendService.uploadFile(filecsv);
-            CSVtoJSON.csvToJson("src/main/resources/upload/noticias_semana.csv", "src/main/resources/upload/noticias_semana.json", excludeHeaders);
+
+            String csvPath = "/tmp/upload/noticias_semana.csv";
+            String jsonPath = "/tmp/upload/noticias_semana.json";
+
+            CSVtoJSON.csvToJson(csvPath, jsonPath, excludeHeaders);
 
             S3SentService sendServiceTrusted = new S3SentService(s3Client, bucketNameTrusted);
-            sendServiceTrusted.uploadFile(Path.of("src/main/resources/upload/noticias_semana.json"));
+            sendServiceTrusted.uploadFile(Path.of(jsonPath));
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
