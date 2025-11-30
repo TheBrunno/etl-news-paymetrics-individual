@@ -20,15 +20,15 @@ public class Main {
                 Irei te enviar uma lista de títulos de notícias, você vai precisar retornar um CSV em texto, no seguinte padrão:
                 
                 ```csv<uma quebra de linha>
-                faz_sentido,explicacao<uma quebra de linha>
-                true,"... (resumo rapido da notícia explicando como e porque pode afetar o e-commerce)"
+                faz_sentido,explicacao,sentimento,impacto<uma quebra de linha>
+                true,"... (resumo rapido da notícia explicando como e porque pode afetar o e-commerce)",POSITIVO (se a noticia é boa ou ruim para o e-commerce (POSITIVO, NEGATIVO, NEUTRO)),ALTO (quanto essa noticia impacta o e-commerce (ALTO, BAIXO, MÉDIO))
                 ```
                 
                 Sem espaços antes e depois das virgulas (commas) divisoras.
                 
                 Na explicação coloque palavras chave em: <strong>palavra-chave</strong>, não retorne com "\\n <quebra de linha>" nem antes nem depois do csv
                 
-                Tenho um e-commerce que pode vender qualquer coisa, preciso de notícias que podem impactar no meu negócio.
+                Tenho um e-commerce que pode vender qualquer coisa, preciso de notícias que podem impactar a demanda nos meus servidores de pagamento, do meu negócio.
                 
                 # TITULO DAS NOTICIAS
                 """;
