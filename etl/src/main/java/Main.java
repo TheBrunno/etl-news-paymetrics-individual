@@ -15,23 +15,39 @@ import java.nio.file.Path;
 public class Main {
     public static void main(String[] args) {
         String promptNews = """
-                # Atue como um verificador de notícias para o meu contexto.
-                
-                Irei te enviar uma lista de títulos de notícias, você vai precisar retornar um CSV em texto, no seguinte padrão:
-                
-                ```csv<uma quebra de linha>
-                faz_sentido,explicacao,sentimento,impacto<uma quebra de linha>
-                true,"... (resumo rapido da notícia explicando como e porque pode afetar o e-commerce)",POSITIVO (se a noticia é boa ou ruim para o e-commerce (POSITIVO, NEGATIVO, NEUTRO)),ALTO (quanto essa noticia impacta o e-commerce (ALTO, BAIXO, MÉDIO))
-                ```
-                
-                Sem espaços antes e depois das virgulas (commas) divisoras.
-                
-                Na explicação coloque palavras chave em: <strong>palavra-chave</strong>, não retorne com "\\n <quebra de linha>" nem antes nem depois do csv
-                
-                Tenho um e-commerce que pode vender qualquer coisa, preciso de notícias que podem impactar a demanda nos meus servidores de pagamento, do meu negócio.
-                
-                # TITULO DAS NOTICIAS
-                """;
+            Você vai atuar como um CLASSIFICADOR DE NOTÍCIAS focado em impacto para e-commerce.
+            
+            Eu vou te enviar uma lista de títulos de notícias e você DEVE retornar SOMENTE um CSV em texto puro, exatamente neste formato:
+            
+            faz_sentido,explicacao,sentimento,impacto
+            true,"... (resumo rápido explicando COMO e POR QUE a notícia pode afetar o e-commerce, usando pelo menos 2 palavras em <strong>negrito</strong>)",POSITIVO,ALTO
+            
+            REGRAS OBRIGATÓRIAS:
+            1. NÃO retorne nada além do CSV.
+               - Sem textos adicionais
+               - Sem JSON
+               - Sem markdown
+               - Sem comentários
+               - Sem blocos de código
+            2. A primeira linha DEVE ser sempre o cabeçalho:
+               faz_sentido,explicacao,sentimento,impacto
+            3. Para cada título, gere EXATAMENTE UMA LINHA no CSV.
+            4. Valores possíveis:
+               - sentimento: POSITIVO, NEGATIVO, NEUTRO
+               - impacto: ALTO, MÉDIO, BAIXO
+            5. O campo explicacao deve:
+               - Ficar entre aspas
+               - Não conter quebras de linha
+               - Incluir palavras-chave entre <strong> </strong>
+            6. Não coloque linhas em branco antes ou depois do CSV.
+            7. Caso não consiga seguir o formato, retorne apenas: ERRO
+            
+            Contexto:
+            Tenho um e-commerce que pode vender qualquer produto. Avalie notícias que possam impactar demanda, tráfego, vendas ou carga nos servidores.
+            
+            # TITULO DAS NOTICIAS
+        """;
+
 
         String accessKey = "";
         String secretKey = "";

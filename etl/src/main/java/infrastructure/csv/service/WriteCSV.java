@@ -41,7 +41,7 @@ public class WriteCSV {
         ) {
             List<String> contentLines = new ArrayList<>(List.of(content.split("\\r?\\n+")));
 
-            contentLines.removeFirst();
+//            contentLines.removeFirst();
 
             String originalLine;
             int i = 0;
